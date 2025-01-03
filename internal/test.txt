@@ -26,3 +26,9 @@
     "C":1,
     "D":1
 }
+
+curl --location 'http://127.0.0.1:8080/calculateMinCost' \
+--header 'Content-Type: application/json' \
+--data '{
+"A": 1, "B": 2, "C": 1, "D": 5, "E": 1, "F": 1, "G": 2, "H": 1, "I": 1
+}'
