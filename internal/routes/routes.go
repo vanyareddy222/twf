@@ -3,7 +3,9 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
+	"twf1/internal/controllers"
 	"twf1/internal/services"
 )
 
@@ -30,4 +32,11 @@ func CalculateDeliveryCost(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func NewRouter() http.Handler {
+	router := mux.NewRouter()
+	router.HandleFunc("/calculateMinCost", controllers.CalculateMinCost).Methods(http.MethodPost) //22 DONE
+
+	return router
 }
