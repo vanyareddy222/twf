@@ -125,7 +125,6 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 			C3L1InputDemand := inputDemand
 			C3L1InputDemand.C3 = nil
 			C3L1 := GetPathCost(structs.WarehouseClientDistance["C3"], *inputDemand.C3) + GetMinCostStartingAtClient(C3L1InputDemand)
-			//C3L1 := *inputDemand.C3*structs.WarehouseClientDistance["C3"] + GetMinCostStartingAtClient(C3L1InputDemand)
 			if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
 				// Create a copy of inputDemand for C1C2
 				C3C2InputDemand := inputDemand
