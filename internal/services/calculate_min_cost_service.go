@@ -80,19 +80,13 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 		if inputDemand.C1 != nil && *inputDemand.C1 > 0 {
 			C1L1InputDemand := inputDemand
 			C1L1InputDemand.C1 = nil
-			abc := GetPathCost(structs.WarehouseClientDistance["C1"], *inputDemand.C1)
-			def := GetMinCostStartingAtClient(C1L1InputDemand)
-			C1L1 := abc + def
-			//C1L1 := *inputDemand.C1*structs.WarehouseClientDistance["C1"] + GetMinCostStartingAtClient(C1L1InputDemand)
+			C1L1 := GetPathCost(structs.WarehouseClientDistance["C1"], *inputDemand.C1) + GetMinCostStartingAtClient(C1L1InputDemand)
 			if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
 				// Create a copy of inputDemand for C1C2
 				C1C2InputDemand := inputDemand
 				C1C2InputDemand.C1 = nil
 				*C1C2InputDemand.C2 += *inputDemand.C1
-				x := GetPathCost(structs.WarehouseDistance["C1C2"], *inputDemand.C1)
-				y := GetMinCostStartingAtWarehouse("C2", C1C2InputDemand)
-				C1C2 := x + y
-				//C1C2 := *inputDemand.C1*structs.WarehouseClientDistance["C1C2"] + GetMinCostStartingAtWarehouse("C2", C1C2InputDemand)
+				C1C2 := GetPathCost(structs.WarehouseDistance["C1C2"], *inputDemand.C1) + GetMinCostStartingAtWarehouse("C2", C1C2InputDemand)
 				cost = min(C1L1, C1C2)
 			} else {
 				cost = C1L1
@@ -106,7 +100,6 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 			C2L1InputDemand := inputDemand
 			C2L1InputDemand.C2 = nil
 			C2L1 := GetPathCost(structs.WarehouseClientDistance["C2"], *inputDemand.C2) + GetMinCostStartingAtClient(C2L1InputDemand)
-			//C2L1 := *inputDemand.C2*structs.WarehouseClientDistance["C2"] + GetMinCostStartingAtClient(C2L1InputDemand)
 			var C2C1, C2C3 float64
 			if inputDemand.C1 != nil && *inputDemand.C1 > 0 {
 				C2C1InputDemand := inputDemand
@@ -119,9 +112,7 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 				C2C3InputDemand := inputDemand
 				C2C3InputDemand.C2 = nil
 				*C2C3InputDemand.C3 += *inputDemand.C2
-				p := GetPathCost(structs.WarehouseDistance["C2C3"], *inputDemand.C3)
-				q := GetMinCostStartingAtWarehouse("C1", C2C3InputDemand)
-				C2C3 = p + q
+				C2C3 = GetPathCost(structs.WarehouseDistance["C2C3"], *inputDemand.C3) + GetMinCostStartingAtWarehouse("C1", C2C3InputDemand)
 
 			}
 			cost = minNonZero(C2L1, C2C3, C2C1)
@@ -133,9 +124,7 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 		if inputDemand.C3 != nil && *inputDemand.C3 > 0 {
 			C3L1InputDemand := inputDemand
 			C3L1InputDemand.C3 = nil
-			p := GetPathCost(structs.WarehouseClientDistance["C3"], *inputDemand.C3)
-			q := GetMinCostStartingAtClient(C3L1InputDemand)
-			C3L1 := p + q
+			C3L1 := GetPathCost(structs.WarehouseClientDistance["C3"], *inputDemand.C3) + GetMinCostStartingAtClient(C3L1InputDemand)
 			//C3L1 := *inputDemand.C3*structs.WarehouseClientDistance["C3"] + GetMinCostStartingAtClient(C3L1InputDemand)
 			if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
 				// Create a copy of inputDemand for C1C2
@@ -143,7 +132,6 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 				C3C2InputDemand.C3 = nil
 				*C3C2InputDemand.C2 += *inputDemand.C3
 				C3C2 := GetPathCost(structs.WarehouseDistance["C3C2"], *inputDemand.C3) + GetMinCostStartingAtWarehouse("C2", C3C2InputDemand)
-				//	C1C2 := *inputDemand.C3*structs.WarehouseClientDistance["C3C1"] + GetMinCostStartingAtWarehouse("C3", C3C1InputDemand)
 				cost = min(C3L1, C3C2)
 			} else {
 				cost = C3L1
@@ -199,7 +187,6 @@ func GetPathCost(distance, weight float64) float64 {
 		multiple := float64(int(remainingWeight) / 5)
 		remainder := float64(int(remainingWeight) % 5)
 
-		//cost += abc * (8 * float64(int(remainingWeight/5)*5))
 		cost += multiple * (8 * distance)
 		// Handle fractional weights (e.g., remaining weight less than 5)
 		if remainder > 0 {
