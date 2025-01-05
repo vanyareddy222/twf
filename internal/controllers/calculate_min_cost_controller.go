@@ -118,14 +118,14 @@ func validateKeys(rawInput map[string]interface{}) (structs.ProductDemandQuantit
 		invalidQuantityList := ""
 
 		if len(invalidProduct) > 0 {
-			invalidProductList = fmt.Sprintf("invalid products: %v", invalidProduct)
+			invalidProductList = fmt.Sprintf("invalid products: %v \n", invalidProduct)
 		}
 
 		if len(invalidQuantity) > 0 {
-			invalidQuantityList = fmt.Sprintf("invalid quantities: fractional and negative orders not allowed for products %v", invalidQuantity)
+			invalidQuantityList = fmt.Sprintf("invalid order quantities for products %v", invalidQuantity)
 		}
 
-		return order, fmt.Errorf("%s, %s", invalidProductList, invalidQuantityList)
+		return order, fmt.Errorf("%s%s", invalidProductList, invalidQuantityList)
 	}
 
 	return order, nil
