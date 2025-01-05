@@ -30,6 +30,19 @@ type ProductDemandQuantity struct {
 	I *int
 }
 
+// Define hardcoded valid keys as a key-value pair with string-bool
+var ValidInputKeys = map[string]bool{
+	"A": true,
+	"B": true,
+	"C": true,
+	"D": true,
+	"E": true,
+	"F": true,
+	"G": true,
+	"H": true,
+	"I": true,
+}
+
 var WarehouseClientDistance = map[string]float64{
 	"C1": 3.0,
 	"C2": 2.5,
