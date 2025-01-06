@@ -78,14 +78,25 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 	switch initialWarehouse {
 	case "C1":
 		if inputDemand.C1 != nil && *inputDemand.C1 > 0 {
-			C1L1InputDemand := inputDemand
-			C1L1InputDemand.C1 = nil
+			C1L1InputDemand := structs.WarehouseCenterDemandQuantity{} // Create a new instance
+			if inputDemand.C2 != nil {
+				valueC2 := *inputDemand.C2 // Dereference C1 if not nil
+				C1L1InputDemand.C2 = &valueC2
+			}
+			if inputDemand.C3 != nil {
+				valueC3 := *inputDemand.C3 // Dereference C1 if not nil
+				C1L1InputDemand.C3 = &valueC3
+			}
 			C1L1 := GetPathCost(structs.WarehouseClientDistance["C1"], *inputDemand.C1) + GetMinCostStartingAtClient(C1L1InputDemand)
 			if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
 				// Create a copy of inputDemand for C1C2
-				C1C2InputDemand := inputDemand
-				C1C2InputDemand.C1 = nil
-				*C1C2InputDemand.C2 += *inputDemand.C1
+				C1C2InputDemand := structs.WarehouseCenterDemandQuantity{}
+				C1C2InputDemand.C2 = new(float64)                       // Allocate new float64 for C2
+				*C1C2InputDemand.C2 = *inputDemand.C2 + *inputDemand.C1 // Correct addition
+				if inputDemand.C3 != nil {
+					valueC3 := *inputDemand.C3 // Dereference C1 if not nil
+					C1C2InputDemand.C3 = &valueC3
+				}
 				C1C2 := GetPathCost(structs.WarehouseDistance["C1C2"], *inputDemand.C1) + GetMinCostStartingAtWarehouse("C2", C1C2InputDemand)
 				cost = min(C1L1, C1C2)
 			} else {
@@ -97,24 +108,49 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 
 	case "C2":
 		if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
-			C2L1InputDemand := inputDemand
+			// C2L1 computation
+			C2L1InputDemand := structs.WarehouseCenterDemandQuantity{} // New instance
+			if inputDemand.C1 != nil {
+				valueC1 := *inputDemand.C1 // Dereference C1 if not nil
+				C2L1InputDemand.C1 = &valueC1
+			}
+			if inputDemand.C3 != nil {
+				valueC3 := *inputDemand.C3 // Dereference C1 if not nil
+				C2L1InputDemand.C3 = &valueC3
+			}
 			C2L1InputDemand.C2 = nil
-			C2L1 := GetPathCost(structs.WarehouseClientDistance["C2"], *inputDemand.C2) + GetMinCostStartingAtClient(C2L1InputDemand)
+			p := GetPathCost(structs.WarehouseClientDistance["C2"], *inputDemand.C2)
+			q := GetMinCostStartingAtClient(C2L1InputDemand)
+			C2L1 := p + q
+
 			var C2C1, C2C3 float64
 			if inputDemand.C1 != nil && *inputDemand.C1 > 0 {
-				C2C1InputDemand := inputDemand
-				C2C1InputDemand.C2 = nil
-				*C2C1InputDemand.C1 += *inputDemand.C2
-				C2C1 = GetPathCost(structs.WarehouseDistance["C2C1"], *inputDemand.C1) + GetMinCostStartingAtWarehouse("C3", C2C1InputDemand)
-
+				// C2C1 computation
+				C2C1InputDemand := structs.WarehouseCenterDemandQuantity{} // New instance
+				C2C1InputDemand.C1 = new(float64)                          // Allocate a new float64
+				*C2C1InputDemand.C1 = *inputDemand.C1 + *inputDemand.C2    // Correct addition
+				if inputDemand.C3 != nil {
+					valueC3 := *inputDemand.C3 // Dereference C1 if not nil
+					C2C1InputDemand.C3 = &valueC3
+				}
+				C2C1 = GetPathCost(structs.WarehouseDistance["C2C1"], *inputDemand.C2) + GetMinCostStartingAtWarehouse("C1", C2C1InputDemand)
 			}
 			if inputDemand.C3 != nil && *inputDemand.C3 > 0 {
-				C2C3InputDemand := inputDemand
-				C2C3InputDemand.C2 = nil
-				*C2C3InputDemand.C3 += *inputDemand.C2
-				C2C3 = GetPathCost(structs.WarehouseDistance["C2C3"], *inputDemand.C3) + GetMinCostStartingAtWarehouse("C1", C2C3InputDemand)
+				// C2C3 computation
+				C2C3InputDemand := structs.WarehouseCenterDemandQuantity{} // New instance
+				C2C3InputDemand.C3 = new(float64)                          // Allocate a new float64
+				*C2C3InputDemand.C3 = *inputDemand.C3 + *inputDemand.C2    // Correct addition
 
+				if inputDemand.C1 != nil {
+					valueC1 := *inputDemand.C1 // Dereference C1 if not nil
+					C2C3InputDemand.C1 = &valueC1
+				}
+
+				p := GetPathCost(structs.WarehouseDistance["C2C3"], *inputDemand.C2)
+				q := GetMinCostStartingAtWarehouse("C3", C2C3InputDemand)
+				C2C3 = p + q
 			}
+
 			cost = minNonZero(C2L1, C2C3, C2C1)
 		} else {
 			return 0.0
@@ -122,15 +158,33 @@ func GetMinCostStartingAtWarehouse(initialWarehouse string, inputDemand structs.
 
 	case "C3":
 		if inputDemand.C3 != nil && *inputDemand.C3 > 0 {
-			C3L1InputDemand := inputDemand
-			C3L1InputDemand.C3 = nil
-			C3L1 := GetPathCost(structs.WarehouseClientDistance["C3"], *inputDemand.C3) + GetMinCostStartingAtClient(C3L1InputDemand)
+			C3L1InputDemand := structs.WarehouseCenterDemandQuantity{} // Create a new instance of the struct
+
+			if inputDemand.C1 != nil {
+				valueC1 := *inputDemand.C1 // Dereference C1 if not nil
+				C3L1InputDemand.C1 = &valueC1
+			}
+			if inputDemand.C2 != nil {
+				valueC2 := *inputDemand.C2 // Dereference C1 if not nil
+				C3L1InputDemand.C2 = &valueC2
+			}
+
+			a := GetPathCost(structs.WarehouseClientDistance["C3"], *inputDemand.C3)
+			b := GetMinCostStartingAtClient(C3L1InputDemand)
+			C3L1 := a + b
+
 			if inputDemand.C2 != nil && *inputDemand.C2 > 0 {
-				// Create a copy of inputDemand for C1C2
-				C3C2InputDemand := inputDemand
-				C3C2InputDemand.C3 = nil
-				*C3C2InputDemand.C2 += *inputDemand.C3
-				C3C2 := GetPathCost(structs.WarehouseDistance["C3C2"], *inputDemand.C3) + GetMinCostStartingAtWarehouse("C2", C3C2InputDemand)
+				// Create a copy of inputDemand for C3C2
+				C3C2InputDemand := structs.WarehouseCenterDemandQuantity{} // Create a new instance of the struct
+				if inputDemand.C1 != nil {
+					valueC1 := *inputDemand.C1 // Dereference C1 if not nil
+					C3C2InputDemand.C1 = &valueC1
+				}
+				C3C2InputDemand.C2 = inputDemand.C2    // Copy the C2 field
+				*C3C2InputDemand.C2 += *inputDemand.C3 // Correct addition
+				p := GetPathCost(structs.WarehouseDistance["C3C2"], *inputDemand.C3)
+				q := GetMinCostStartingAtWarehouse("C2", C3C2InputDemand)
+				C3C2 := p + q
 				cost = min(C3L1, C3C2)
 			} else {
 				cost = C3L1
